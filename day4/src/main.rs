@@ -1,3 +1,7 @@
+#![feature(vec_retain_mut)]
+
+use std::fmt::{Display, Formatter};
+
 const INPUT: &'static str = include_str!("input");
 
 #[derive(Debug, Copy, Clone)]
@@ -21,6 +25,24 @@ impl Board {
             let check = &mut self.0[row][col];
             check.checked |= check.value == num;
         }))
+    }
+
+    fn unmarked_sum(&self) -> usize {
+        self.0.iter()
+            .map(|row| row.iter()
+                .filter(|check| !check.checked)
+                .map(|check| check.value).sum::<usize>())
+            .sum()
+    }
+}
+
+impl Display for Board {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", (0..5)
+            .map(|col| self.0[col].map(|c| format!("{}{}", if c.checked { "X" } else { "" }, c.value)).join("\t"))
+            .collect::<Vec<String>>()
+            .join("\n")
+        )
     }
 }
 
@@ -55,6 +77,7 @@ fn read_bingo(input: &str) -> Bingo {
     }
 }
 
+#[cfg(feature = "part1")]
 fn main() {
     let mut bingo = read_bingo(INPUT);
 
@@ -62,11 +85,33 @@ fn main() {
         for board in &mut bingo.boards {
             board.check(num);
             if board.is_won() {
-                let sum: usize = board.0.iter()
-                    .map(|row| row.iter()
-                        .filter(|check| !check.checked)
-                        .map(|check| check.value).sum::<usize>())
-                    .sum();
+                let sum = board.unmarked_sum();
+                dbg!(sum);
+                dbg!(num);
+                dbg!(sum * num);
+                return;
+            }
+        }
+    }
+}
+
+#[cfg(not(feature = "part1"))]
+fn main() {
+    let mut bingo = read_bingo(INPUT);
+
+    for num in bingo.numbers {
+        let len = bingo.boards.len();
+        if len > 1 {
+            bingo.boards.retain_mut(|board| {
+                board.check(num);
+                !board.is_won()
+            });
+        } else {
+            let board = &mut bingo.boards[0];
+            board.check(num);
+            if board.is_won() {
+                println!("{}", board);
+                let sum = board.unmarked_sum();
                 dbg!(sum);
                 dbg!(num);
                 dbg!(sum * num);
