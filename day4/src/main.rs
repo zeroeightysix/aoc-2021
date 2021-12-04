@@ -1,19 +1,9 @@
-use std::ops::Deref;
-
 const INPUT: &'static str = include_str!("input");
 
 #[derive(Debug, Copy, Clone)]
 struct Check<T: Copy> {
     checked: bool,
     value: T,
-}
-
-impl<T: Copy> Deref for Check<T> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        &self.value
-    }
 }
 
 #[derive(Debug)]
